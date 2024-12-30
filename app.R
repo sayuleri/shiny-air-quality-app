@@ -20,6 +20,7 @@ library(scales)
 
 # Read the data
 # data <- read.csv("D:/BaiduSyncdisk/UM/WQD7001/group/final_datasetfile.csv")
+
 # current_dir <- getwd()
 # file_path <- file.path(current_dir, "final_datasetfile.csv")
 # data <- read.csv(file_path)
@@ -28,6 +29,10 @@ library(scales)
 
 # Read the data from GitHub
 github_url <- "https://raw.githubusercontent.com/sayuleri/shiny-air-quality-app/main/final_datasetfile.csv"
+
+data <- read.csv(github_url)
+# print("File successfully loaded from GitHub.")
+# str(data)
 
 
 # Rename columns for compatibility
@@ -180,7 +185,7 @@ server <- function(input, output, session) {
         )
         
         leaflet(data) %>%
-          addTiles() %>%
+          addProviderTiles(providers$CartoDB.Positron) %>% # map-EN
           addCircleMarkers(
             lng = ~Longitude,
             lat = ~Latitude,
@@ -195,7 +200,11 @@ server <- function(input, output, session) {
             title = input$map_metric,
             opacity = 1
           ) %>%
-          setView(lng = mean(data$Longitude, na.rm = TRUE), lat = mean(data$Latitude, na.rm = TRUE), zoom = 4)
+          setView(
+            lng = mean(data$Longitude, na.rm = TRUE),
+            lat = mean(data$Latitude, na.rm = TRUE),
+            zoom = 4
+          )
       })
     } else if (input$visualization == "trend") {
       output$page_output <- renderUI({
@@ -260,79 +269,20 @@ server <- function(input, output, session) {
           theme(axis.text.x = element_text(angle = 45, hjust = 1))
       })
     }else if (input$visualization == "prediction") {
-      output$page_output <- renderUI({
-        plotOutput("prediction_plot", height = "70vh")
-      })
-      output$prediction_plot <- renderPlot({
-        validate(
-          need(input$prediction_country %in% unique(data$City), "Selected country is missing from the dataset.")
-        )
-        
-        # Filter data for the selected country
-        country_data <- data %>%
-          filter(City == input$prediction_country) %>%
-          arrange(Date)
-        
-        # Check for required columns
-        required_columns <- c("DAQI", "AQI_PM2.5", "AQI_PM10", 
-                              "AQI_O3", "AQI_NO2", "AQI_SO2")
-        missing_columns <- setdiff(required_columns, colnames(country_data))
-        validate(
-          need(length(missing_columns) == 0, paste("Missing columns:", paste(missing_columns, collapse = ", ")))
-        )
-        
-        # Split data into training and testing sets
-        train_data <- country_data %>% filter(Date <= as.Date("2024-08-31"))
-        test_data <- country_data %>% filter(Date > as.Date("2024-08-31"))
-        
-        # Standardize external variables
-        exog_columns <- c("AQI_PM2.5", "AQI_PM10", "AQI_O3", "AQI_NO2", "AQI_SO2")
-        scaler <- scale(train_data[exog_columns])
-        train_exog <- scaler
-        mean_values <- attr(scaler, "scaled:center")
-        std_values <- attr(scaler, "scaled:scale")
-        test_exog <- scale(test_data[exog_columns], center = mean_values, scale = std_values)
-        
-        # Extract target variable
-        y_train <- train_data$DAQI
-        y_test <- test_data$DAQI
-        
-        # Build SARIMAX model
-        sarima_model <- auto.arima(y_train, xreg = train_exog, seasonal = TRUE)
-        
-        # Forecast on the test set
-        forecast_result <- forecast(sarima_model, xreg = test_exog, h = nrow(test_data))
-        
-        # Evaluate model performance
-        mse <- mean((y_test - forecast_result$mean)^2)
-        mae <- mean(abs(y_test - forecast_result$mean))
-        rmse <- sqrt(mse)
-        
-        cat("Mean Absolute Error (MAE):", mae, "\n")
-        cat("Mean Squared Error (MSE):", mse, "\n")
-        cat("Root Mean Squared Error (RMSE):", rmse, "\n")
-        
-        # Prepare forecast data for visualization
-        forecast_df <- data.frame(
-          Date = test_data$Date,
-          Predicted_DAQI = forecast_result$mean
-        )
-        
-        # Visualize the prediction results
-        ggplot() +
-          geom_line(data = train_data, aes(x = Date, y = DAQI, color = "Training Data")) +
-          geom_line(data = test_data, aes(x = Date, y = DAQI, color = "Test Data")) +
-          geom_line(data = forecast_df, aes(x = Date, y = Predicted_DAQI, color = "Forecast")) +
-          scale_color_manual(values = c("Training Data" = "blue", "Test Data" = "orange", "Forecast" = "red")) +
-          labs(
-            title = paste("DAQI Prediction for", input$prediction_country, "using SARIMAX with Multiple Variables"),
-            x = "Date",
-            y = "DAQI"
-          ) +
-          theme_minimal() +
-          theme(legend.title = element_blank())
-      })
-    }
+  output$page_output <- renderUI({
+    tags$div(
+      tags$img(
+        src = paste0(
+          "https://raw.githubusercontent.com/sayuleri/shiny-air-quality-app/main/visualization/",
+          input$prediction_country, "_prediction.png"
+        ),
+        alt = paste("Prediction for", input$prediction_country),
+        style = "width:100%; height:auto; max-height:70vh;"
+      )
+    )
+  })
+}
+
   })
 }
 
