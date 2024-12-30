@@ -20,11 +20,14 @@ library(scales)
 
 # Read the data
 # data <- read.csv("D:/BaiduSyncdisk/UM/WQD7001/group/final_datasetfile.csv")
-current_dir <- getwd()
-file_path <- file.path(current_dir, "final_datasetfile.csv")
-data <- read.csv(file_path)
-print(paste("File loaded from:", file_path))
-str(data)
+# current_dir <- getwd()
+# file_path <- file.path(current_dir, "final_datasetfile.csv")
+# data <- read.csv(file_path)
+# print(paste("File loaded from:", file_path))
+# str(data)
+
+# Read the data from GitHub
+github_url <- "https://raw.githubusercontent.com/sayuleri/shiny-air-quality-app/main/final_datasetfile.csv"
 
 
 # Rename columns for compatibility
