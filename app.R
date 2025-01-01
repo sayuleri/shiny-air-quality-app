@@ -99,7 +99,7 @@ ui <- fluidPage(
     "))
   ),
   div(id = "homepage", leafletOutput("background_map", width = "100%", height = "100%")),
-  div(class = "title-overlay", "Asia Air Quality Visualization Platform"),
+  div(class = "title-overlay", "Air Quality Visualization and Prediction Platform"),
   div(
     id = "main-panel",
     sidebarLayout(
