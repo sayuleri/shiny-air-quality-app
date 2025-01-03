@@ -273,8 +273,8 @@ server <- function(input, output, session) {
     tags$div(
       tags$img(
         src = paste0(
-          "https://raw.githubusercontent.com/sayuleri/shiny-air-quality-app/main/visualization/",
-          input$prediction_country, "_prediction.png"
+          "https://raw.githubusercontent.com/sayuleri/shiny-air-quality-app/main/visualization_predict/",
+          input$prediction_country, "_aqi_prediction.png"
         ),
         alt = paste("Prediction for", input$prediction_country),
         style = "width:100%; height:auto; max-height:70vh;"
